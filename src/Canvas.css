@@ -1,0 +1,14 @@
+/* CanvasStyles.css */
+.canvasContainer {
+    position: relative;
+    width: 100%; /* Adjust based on your layout */
+    height: 100vh; /* Adjust based on your layout */
+}
+
+.myCanvas {
+    width: 100vw; /* 100% of the viewport width */
+    height: 100vh; /* 100% of the viewport height */
+    position: fixed; /* Or absolute, depending on your layout */
+    top: 0;
+    left: 0;
+}
