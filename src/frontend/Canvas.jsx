@@ -4,8 +4,8 @@ import { fabric } from 'fabric';
 const PenToolCanvas = () => {
   const [isDrawing, setIsDrawing] = useState(false);
   const canvasRef = useRef(null);
-  const lineRef = useRef(null);
-  const isDrawingRef = useRef(isDrawing); // Use a ref to hold the drawing state for event handlers
+  const isDrawingRef = useRef(false); // Use a ref to hold the drawing state for event handlers
+  const lastPointRef = useRef(null); // Ref to hold the last point
 
   useEffect(() => {
     const canvasElement = canvasRef.current;
@@ -13,63 +13,81 @@ const PenToolCanvas = () => {
       selection: false, // Disable object selection
     });
 
-    // This function adjusts the canvas size to the window's dimensions
     const updateCanvasSize = () => {
       canvas.setWidth(window.innerWidth);
       canvas.setHeight(window.innerHeight);
       canvas.renderAll();
     };
 
-    // Toggle drawing mode based on Shift key without re-initializing the effect
     const toggleDrawingMode = (event) => {
       if (event.keyCode === 16) { // Shift key
-        const newIsDrawing = !isDrawingRef.current;
-        setIsDrawing(newIsDrawing); // Update state
-        isDrawingRef.current = newIsDrawing; // Update ref to current drawing state
+        isDrawingRef.current = !isDrawingRef.current;
+        setIsDrawing(isDrawingRef.current); // Update state to reflect the drawing mode
+        if (!isDrawingRef.current) {
+          // Reset drawing state when exiting drawing mode
+          lastPointRef.current = null;
+        }
         event.preventDefault();
       }
     };
 
-    // Begins a new line on mouse down, if in drawing mode
-    const onMouseDown = (o) => {
-      if (!isDrawingRef.current) return; // Use ref to check drawing state
+    canvas.on('mouse:down', (o) => {
+      if (!isDrawingRef.current) return;
+
       const pointer = canvas.getPointer(o.e);
-      const newLine = new fabric.Line([pointer.x, pointer.y, pointer.x, pointer.y], {
+      if (lastPointRef.current) {
+        // Draw a line from the last point to the current point
+        const line = new fabric.Line([...lastPointRef.current, pointer.x, pointer.y], {
+          strokeWidth: 2,
+          fill: 'black',
+          stroke: 'black',
+          originX: 'center',
+          originY: 'center',
+          selectable: false,
+          evented: false,
+        });
+        canvas.add(line);
+      }
+      // Update lastPointRef to the current point for the next line
+      lastPointRef.current = [pointer.x, pointer.y];
+    });
+
+    canvas.on('mouse:move', (o) => {
+      if (!isDrawingRef.current || !lastPointRef.current) return;
+
+      // Temporarily display a line to follow the cursor
+      const pointer = canvas.getPointer(o.e);
+      // Remove any existing temporary line
+      if (canvas.contains(canvas._objects[canvas._objects.length - 1])) {
+        canvas.remove(canvas._objects[canvas._objects.length - 1]);
+      }
+      const tempLine = new fabric.Line([...lastPointRef.current, pointer.x, pointer.y], {
         strokeWidth: 2,
-        fill: 'black',
+        fill: 'black', // Temporary line in red to distinguish it
         stroke: 'black',
         originX: 'center',
         originY: 'center',
         selectable: false,
         evented: false,
       });
-      lineRef.current = newLine;
-      canvas.add(newLine);
-    };
+      canvas.add(tempLine);
+      canvas.renderAll();
+    });
 
-    // Updates the current line's end point on mouse move, if in drawing mode
-    const onMouseMove = (o) => {
-      if (!isDrawingRef.current || !lineRef.current) return; // Use ref to check drawing state
-      const pointer = canvas.getPointer(o.e);
-      lineRef.current.set({ x2: pointer.x, y2: pointer.y });
-      canvas.requestRenderAll();
-    };
-
+    // Add event listeners and initialize canvas size
     updateCanvasSize();
     window.addEventListener('resize', updateCanvasSize);
     document.addEventListener('keydown', toggleDrawingMode);
-    canvas.on('mouse:down', onMouseDown);
-    canvas.on('mouse:move', onMouseMove);
 
-    // Cleanup event listeners and Fabric.js canvas on component unmount
     return () => {
+      // Cleanup event listeners and Fabric.js canvas on component unmount
       window.removeEventListener('resize', updateCanvasSize);
       document.removeEventListener('keydown', toggleDrawingMode);
-      canvas.off('mouse:down', onMouseDown);
-      canvas.off('mouse:move', onMouseMove);
+      canvas.off('mouse:down');
+      canvas.off('mouse:move');
       canvas.dispose();
     };
-  }, []); // No dependencies to avoid re-initializing the effect
+  }, []);
 
   return (
     <div className="canvasContainer">
