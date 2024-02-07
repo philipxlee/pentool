@@ -2,7 +2,7 @@
 
 
 ### Attributions
-- Fabrics.js -- http://fabricjs.com/docs/fabric.Canvas.html
+- Fabric.js -- http://fabricjs.com/docs/fabric.Canvas.html
 - OpenAI ChatGPT -- https://chat.openai.com
 
 
