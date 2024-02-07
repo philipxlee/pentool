@@ -1,38 +1,40 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { fabric } from 'fabric';
-import '../Canvas.css'; // Ensure the path is correct based on your project structure
 
 const PenToolCanvas = () => {
+  const [isDrawing, setIsDrawing] = useState(false);
   const canvasRef = useRef(null);
-  const [isDrawing, setIsDrawing] = useState(false); // Use useState for drawing state
-  let line = null;
+  const lineRef = useRef(null);
+  const isDrawingRef = useRef(isDrawing); // Use a ref to hold the drawing state for event handlers
 
   useEffect(() => {
     const canvasElement = canvasRef.current;
     const canvas = new fabric.Canvas(canvasElement, {
-      selection: false // Disable object selection
+      selection: false, // Disable object selection
     });
 
+    // This function adjusts the canvas size to the window's dimensions
     const updateCanvasSize = () => {
       canvas.setWidth(window.innerWidth);
       canvas.setHeight(window.innerHeight);
       canvas.renderAll();
     };
 
-    updateCanvasSize();
-    window.addEventListener('resize', updateCanvasSize);
-
+    // Toggle drawing mode based on Shift key without re-initializing the effect
     const toggleDrawingMode = (event) => {
-      if (event.keyCode === 16) { // Check if Shift key was pressed (keyCode 16)
-        setIsDrawing(!isDrawing); // Toggle the drawing state
-        event.preventDefault(); // Prevent default to avoid any unwanted side effects
+      if (event.keyCode === 16) { // Shift key
+        const newIsDrawing = !isDrawingRef.current;
+        setIsDrawing(newIsDrawing); // Update state
+        isDrawingRef.current = newIsDrawing; // Update ref to current drawing state
+        event.preventDefault();
       }
     };
 
+    // Begins a new line on mouse down, if in drawing mode
     const onMouseDown = (o) => {
-      if (!isDrawing) return;
+      if (!isDrawingRef.current) return; // Use ref to check drawing state
       const pointer = canvas.getPointer(o.e);
-      line = new fabric.Line([pointer.x, pointer.y, pointer.x, pointer.y], {
+      const newLine = new fabric.Line([pointer.x, pointer.y, pointer.x, pointer.y], {
         strokeWidth: 2,
         fill: 'black',
         stroke: 'black',
@@ -41,21 +43,25 @@ const PenToolCanvas = () => {
         selectable: false,
         evented: false,
       });
-      canvas.add(line);
+      lineRef.current = newLine;
+      canvas.add(newLine);
     };
 
+    // Updates the current line's end point on mouse move, if in drawing mode
     const onMouseMove = (o) => {
-      if (!isDrawing || !line) return;
+      if (!isDrawingRef.current || !lineRef.current) return; // Use ref to check drawing state
       const pointer = canvas.getPointer(o.e);
-      line.set({ x2: pointer.x, y2: pointer.y });
+      lineRef.current.set({ x2: pointer.x, y2: pointer.y });
       canvas.requestRenderAll();
     };
 
+    updateCanvasSize();
+    window.addEventListener('resize', updateCanvasSize);
     document.addEventListener('keydown', toggleDrawingMode);
-
     canvas.on('mouse:down', onMouseDown);
     canvas.on('mouse:move', onMouseMove);
 
+    // Cleanup event listeners and Fabric.js canvas on component unmount
     return () => {
       window.removeEventListener('resize', updateCanvasSize);
       document.removeEventListener('keydown', toggleDrawingMode);
@@ -63,11 +69,13 @@ const PenToolCanvas = () => {
       canvas.off('mouse:move', onMouseMove);
       canvas.dispose();
     };
-  }, [isDrawing]); // Add isDrawing as a dependency to useEffect
+  }, []); // No dependencies to avoid re-initializing the effect
 
-  return <div className="canvasContainer">
-    <canvas ref={canvasRef} className="myCanvas" />
-  </div>;
+  return (
+    <div className="canvasContainer">
+      <canvas ref={canvasRef} className="myCanvas" />
+    </div>
+  );
 };
 
 export default PenToolCanvas;
