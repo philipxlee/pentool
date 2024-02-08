@@ -45,6 +45,19 @@ const PenToolCanvas = () => {
         tempLineRef.current.set({ x2: pointer.x, y2: pointer.y, stroke: 'black', fill: 'black' });
         tempLineRef.current = null; // Clear the temporary line reference
       }
+
+      const circle = new fabric.Circle({
+        radius: 3, // Adjust the size of the circle here
+        fill: 'black', // Circle color
+        left: pointer.x,
+        top: pointer.y,
+        originX: 'center',
+        originY: 'center',
+        selectable: false,
+        evented: false,
+      });
+      canvas.add(circle);
+      
       // Update lastPointRef to the current point for the next line
       lastPointRef.current = [pointer.x, pointer.y];
     });
