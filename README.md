@@ -24,7 +24,7 @@
 - While in drawing mode, click `q` to toggle the ability to draw curves.
 - Drawing curves requires the placement of three points:
     - 1st point: where you want the curve to start
-    - 2nd point: where the curve will change inflexion
+    - 2nd point: where the curve turns
     - 3rd point: where the curve ends
 - While in drawing mode, click `w` to create a handle with ends that can be dragged.
     - Dragging the circles of the handles outwards increases the length of the handle.
