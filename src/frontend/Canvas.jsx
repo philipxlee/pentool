@@ -109,7 +109,7 @@ const PenToolCanvas = () => {
         });
         canvas.add(curve);
         pointsRef.current = [];
-        lastPointRef.current = null;
+        lastPointRef.current = { x: end.x, y: end.y };
         canvas.getObjects('circle').forEach((obj) => {
           if (obj.left === control.x && obj.top === control.y) {
             canvas.remove(obj);
@@ -241,7 +241,7 @@ const PenToolCanvas = () => {
           tempLineRef.current = null;
         }
 
-        if (!handleLineRef.current) {
+        if (!handleLineRef.current && lastPointRef.current) {
           drawHandle();
         }
         canvas.renderAll();
