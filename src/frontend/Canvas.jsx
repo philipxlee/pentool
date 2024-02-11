@@ -15,8 +15,6 @@ const PenToolCanvas = () => {
   const startCircleRef = useRef(null);
   const endCircleRef = useRef(null);
 
-
-
   useEffect(() => {
     let isMounted = true;
     const canvasElement = canvasRef.current;
@@ -24,12 +22,8 @@ const PenToolCanvas = () => {
       selection: false,
     });
 
-
     fabric.Image.fromURL(imageUrl, function(img) {
       if (!isMounted) return;
-      // Scale the image to fit the canvas width or height as desired
-
-      // After scaling, center the image horizontally
       const centeredLeftPosition = (canvas.width - img.getScaledWidth()) / 1.2;
       img.set({
         scaleX: 0.6,
@@ -173,7 +167,7 @@ const PenToolCanvas = () => {
     const drawHandle = () => {
       if (!lastPointRef.current) return;
 
-      const handleLength = 100; // Adjust based on your needs
+      const handleLength = 100; 
       const halfLength = handleLength / 2;
       const startX = lastPointRef.current.x - halfLength;
       const startY = lastPointRef.current.y;
@@ -246,11 +240,31 @@ const PenToolCanvas = () => {
           canvas.remove(tempLineRef.current);
           tempLineRef.current = null;
         }
-        drawHandle();
+
+        if (!handleLineRef.current) {
+          drawHandle();
+        }
         canvas.renderAll();
       }
-
     };
+
+    const removeHandle = () => {
+      if (handleLineRef.current) {
+        canvas.remove(handleLineRef.current);
+        handleLineRef.current = null;
+      }
+      if (startCircleRef.current) {
+        canvas.remove(startCircleRef.current);
+        startCircleRef.current = null;
+      }
+      if (endCircleRef.current) {
+        canvas.remove(endCircleRef.current);
+        endCircleRef.current = null;
+      }
+      canvas.renderAll();
+    };
+
+
 
     const resetDrawingState = () => {
       lastPointRef.current = null;
@@ -263,6 +277,7 @@ const PenToolCanvas = () => {
 
     canvas.on('mouse:down', (o) => {
       if (!isDrawingRef.current) return;
+      removeHandle()
       let originalPointer = canvas.getPointer(o.e);
       const nearestNode = findNearestNode(originalPointer);
       let effectivePointer = nearestNode || originalPointer; // Use nearestNode if exists, otherwise use originalPointer
