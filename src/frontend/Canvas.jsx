@@ -11,6 +11,11 @@ const PenToolCanvas = () => {
   const lastPointRef = useRef(null);
   const tempLineRef = useRef(null);
   const pointsRef = useRef([]);
+  const handleLineRef = useRef(null);
+  const startCircleRef = useRef(null);
+  const endCircleRef = useRef(null);
+
+
 
   useEffect(() => {
     let isMounted = true;
@@ -119,6 +124,107 @@ const PenToolCanvas = () => {
       }
     };
 
+    const updateHandle = (circle, isStartCircle) => {
+      const oppositeCircleRef = isStartCircle ? endCircleRef : startCircleRef;
+      const line = handleLineRef.current;
+      const lastPoint = lastPointRef.current;
+
+      if (!line || !circle || !oppositeCircleRef.current || !lastPoint) return;
+
+      const currentCircle = circle;
+      const oppositeCircle = oppositeCircleRef.current;
+
+      // Calculate angle
+      const dx = oppositeCircle.left - currentCircle.left;
+      const dy = oppositeCircle.top - currentCircle.top;
+      const angle = Math.atan2(dy, dx);
+
+      // Update line position
+      line.set({
+        x1: currentCircle.left,
+        y1: currentCircle.top,
+        x2: oppositeCircle.left,
+        y2: oppositeCircle.top,
+      });
+
+      // Ensure the line's midpoint stays at the last point
+      const midX = (line.x1 + line.x2) / 2;
+      const midY = (line.y1 + line.y2) / 2;
+      const deltaX = lastPoint.x - midX;
+      const deltaY = lastPoint.y - midY;
+
+      line.set({
+        x1: line.x1 + deltaX,
+        y1: line.y1 + deltaY,
+        x2: line.x2 + deltaX,
+        y2: line.y2 + deltaY,
+      });
+
+      currentCircle.set({ left: line.x1, top: line.y1 });
+      oppositeCircle.set({ left: line.x2, top: line.y2 });
+
+      // Ensure the circles move with the line ends
+      currentCircle.setCoords();
+      oppositeCircle.setCoords();
+
+      canvas.renderAll();
+    };
+
+    const drawHandle = () => {
+      if (!lastPointRef.current) return;
+
+      const handleLength = 100; // Adjust based on your needs
+      const halfLength = handleLength / 2;
+      const startX = lastPointRef.current.x - halfLength;
+      const startY = lastPointRef.current.y;
+      const endX = lastPointRef.current.x + halfLength;
+      const endY = lastPointRef.current.y;
+
+      const handleLine = new fabric.Line([startX, startY, endX, endY], {
+        strokeWidth: 2,
+        stroke: 'blue',
+        selectable: false,
+        evented: false,
+      });
+
+      canvas.add(handleLine);
+      handleLineRef.current = handleLine;
+
+      // Create draggable circles
+      const createCircle = (left, top, isStartCircle) => {
+        const circle = new fabric.Circle({
+          left,
+          top,
+          strokeWidth: 2,
+          radius: 5,
+          fill: '#fff',
+          stroke: '#666',
+          originX: 'center',
+          originY: 'center',
+          hasControls: false,
+          hasBorders: false,
+          selectable: true,
+          lockRotation: true,
+        });
+
+        circle.on('moving', function () {
+          updateHandle(circle, isStartCircle);
+        });
+
+        return circle;
+      };
+
+      const startCircle = createCircle(startX, startY, true);
+      const endCircle = createCircle(endX, endY, false);
+
+      canvas.add(startCircle, endCircle);
+      startCircleRef.current = startCircle;
+      endCircleRef.current = endCircle;
+
+      // Disable further drawing
+      setIsDrawing(false);
+    };
+
     const toggleDrawingMode = (event) => {
       if (event.keyCode === 16) {
         isDrawingRef.current = !isDrawingRef.current;
@@ -132,7 +238,18 @@ const PenToolCanvas = () => {
           tempLineRef.current = null;
         }
         drawingModeRef.current = drawingModeRef.current === 'line' ? 'curve' : 'line';
+      } else if (event.keyCode == 87) {
+        isDrawingRef.current = false; // Disable drawing mode
+        setIsDrawing(false)
+
+        if (tempLineRef.current) {
+          canvas.remove(tempLineRef.current);
+          tempLineRef.current = null;
+        }
+        drawHandle();
+        canvas.renderAll();
       }
+
     };
 
     const resetDrawingState = () => {
