@@ -26,11 +26,14 @@
     - 1st point: where you want the curve to start
     - 2nd point: where the curve will change inflexion
     - 3rd point: where the curve ends
+- While in drawing mode, click `w` to create a handle with ends that can be dragged.
+    - Dragging the circles of the handles outwards increases the length of the handle.
+    - Dragging the circles of the handles around will rotate the handle.
 
 ---
 
 ### Notes
-- The curve tool is modeled after a quadratic function, so its functionality is more limited than other illustrators that model their curve tools after the Bezier curve.
-- The limitations of fabrics is that it does not come with tools to implement a Bezier curve.
-
+- The curve tool is currently based on manually placed points that generate a quadratic curve with SVG paths.
+- Further development is needed for the curve tool to generate Bezier cubic curves with SVG paths.
+- The logic between the handle and the curvature of lines is not implemented.
 ---
