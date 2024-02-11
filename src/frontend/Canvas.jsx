@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { fabric } from 'fabric';
+import shirtImage from '../assets/outline.png';
+const imageUrl = shirtImage;
 
 const PenToolCanvas = () => {
   const [isDrawing, setIsDrawing] = useState(false);
@@ -11,9 +13,30 @@ const PenToolCanvas = () => {
   const pointsRef = useRef([]);
 
   useEffect(() => {
+    let isMounted = true;
     const canvasElement = canvasRef.current;
     const canvas = new fabric.Canvas(canvasElement, {
       selection: false,
+    });
+
+
+    fabric.Image.fromURL(imageUrl, function(img) {
+      if (!isMounted) return;
+      // Scale the image to fit the canvas width or height as desired
+
+      // After scaling, center the image horizontally
+      const centeredLeftPosition = (canvas.width - img.getScaledWidth()) / 1.2;
+      img.set({
+        scaleX: 0.6,
+        scaleY: 0.6,
+      });
+      // Set the image as background with centered position
+      canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
+        top: 0,
+        left: centeredLeftPosition,
+        originX: 'left',
+        originY: 'top',
+      });
     });
 
     const updateCanvasSize = () => {
@@ -57,7 +80,7 @@ const PenToolCanvas = () => {
     const drawLine = (pointer) => {
       if (lastPointRef.current) {
         const line = new fabric.Line([lastPointRef.current.x, lastPointRef.current.y, pointer.x, pointer.y], {
-          strokeWidth: 2,
+          strokeWidth: 5,
           fill: 'black',
           stroke: 'black',
           originX: 'center',
@@ -80,7 +103,7 @@ const PenToolCanvas = () => {
         const [start, control, end] = pointsRef.current;
         const curve = new fabric.Path(`M ${start.x} ${start.y} Q ${control.x} ${control.y}, ${end.x} ${end.y}`, {
           stroke: 'black',
-          strokeWidth: 2,
+          strokeWidth: 5,
           fill: '',
           selectable: false,
           evented: false,
@@ -149,7 +172,7 @@ const PenToolCanvas = () => {
         canvas.renderAll();
       } else {
         const tempLine = new fabric.Line([lastPointRef.current.x, lastPointRef.current.y, pointer.x, pointer.y], {
-          strokeWidth: 2,
+          strokeWidth: 3,
           fill: 'red',
           stroke: 'red',
           originX: 'center',
@@ -167,6 +190,7 @@ const PenToolCanvas = () => {
     window.addEventListener('resize', updateCanvasSize);
 
     return () => {
+      isMounted = false;
       window.removeEventListener('resize', updateCanvasSize);
       document.removeEventListener('keydown', toggleDrawingMode);
       canvas.dispose();
