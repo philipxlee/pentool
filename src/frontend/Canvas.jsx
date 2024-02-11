@@ -65,7 +65,7 @@ const PenToolCanvas = () => {
 
     const drawNode = (pointer) => {
       const circle = new fabric.Circle({
-        radius: 3,
+        radius: 5,
         fill: 'black',
         left: pointer.x,
         top: pointer.y,
