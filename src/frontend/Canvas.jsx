@@ -221,6 +221,7 @@ const PenToolCanvas = () => {
 
     const toggleDrawingMode = (event) => {
       if (event.keyCode === 16) {
+        clearIncompleteCurvePoints(); 
         isDrawingRef.current = !isDrawingRef.current;
         setIsDrawing(isDrawingRef.current);
         if (!isDrawingRef.current) {
@@ -241,6 +242,7 @@ const PenToolCanvas = () => {
           tempLineRef.current = null;
         }
 
+        // Only draw handle if the point doesnt have a handle already, and theres a valid node
         if (!handleLineRef.current && lastPointRef.current) {
           drawHandle();
         }
@@ -264,14 +266,28 @@ const PenToolCanvas = () => {
       canvas.renderAll();
     };
 
-
-
     const resetDrawingState = () => {
       lastPointRef.current = null;
       pointsRef.current = [];
       if (tempLineRef.current) {
         canvas.remove(tempLineRef.current);
         tempLineRef.current = null;
+      }
+    };
+
+    const clearIncompleteCurvePoints = () => {
+      // Check if we have an incomplete curve (less than 3 points)
+      if (pointsRef.current.length > 0 && pointsRef.current.length < 3) {
+        pointsRef.current.forEach(point => {
+          canvas.getObjects().forEach((obj) => {
+            if (obj.type === 'circle' && obj.left === point.x && obj.top === point.y) {
+              canvas.remove(obj);
+            }
+          });
+        });
+        // Clear the points since we're not completing a curve
+        pointsRef.current = [];
+        canvas.renderAll();
       }
     };
 
