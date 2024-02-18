@@ -1,4 +1,4 @@
-import PenTool from "./frontend/Canvas"
+import PenTool from "./components/Canvas.jsx"
 
 function App() {
   return <PenTool/>;

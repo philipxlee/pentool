@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { fabric } from 'fabric';
 import shirtImage from '../assets/outline.png';
+import '../Canvas.css';
 const imageUrl = shirtImage;
 
-const PenToolCanvas = () => {
+ const PenToolCanvas = () => {
   const [isDrawing, setIsDrawing] = useState(false);
+  const [modeDisplay, setModeDisplay] = useState('Not drawing'); // Added state for mode display
   const canvasRef = useRef(null);
   const drawingModeRef = useRef('line');
   const isDrawingRef = useRef(false);
@@ -14,7 +16,6 @@ const PenToolCanvas = () => {
   const handleLineRef = useRef(null);
   const startCircleRef = useRef(null);
   const endCircleRef = useRef(null);
-
   useEffect(() => {
     let isMounted = true;
     const canvasElement = canvasRef.current;
@@ -43,6 +44,24 @@ const PenToolCanvas = () => {
       canvas.setHeight(window.innerHeight);
       canvas.renderAll();
     };
+
+    
+    const updateModeDisplay = () => {
+      const drawingStatus = isDrawingRef.current ? 'On' : 'Off';
+      setModeDisplay(
+        <div>
+          Drawing: {drawingStatus} 
+          <br />
+          Mode: {drawingModeRef.current === 'line' ? 'Line' : 'Curve'}
+          <br />
+          Controls: 
+          <br /> &nbsp;&nbsp;&nbsp;&nbsp;- Q: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Switch Mode
+          <br /> &nbsp;&nbsp;&nbsp;&nbsp;- Shift: &nbsp; Toggle Draw
+          <br /> &nbsp;&nbsp;&nbsp;&nbsp;- W: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Toggle Handle
+        </div>
+      );
+    };
+    
 
     const findNearestNode = (pointer) => {
       const threshold = 20;
@@ -115,6 +134,8 @@ const PenToolCanvas = () => {
             canvas.remove(obj);
           }
         });
+        drawingModeRef.current = 'line'; // default back to drawing lines after a curve
+        updateModeDisplay();
       }
     };
 
@@ -248,6 +269,7 @@ const PenToolCanvas = () => {
         }
         canvas.renderAll();
       }
+      updateModeDisplay();
     };
 
     const removeHandle = () => {
@@ -336,6 +358,7 @@ const PenToolCanvas = () => {
     document.addEventListener('keydown', toggleDrawingMode);
     updateCanvasSize();
     window.addEventListener('resize', updateCanvasSize);
+    updateModeDisplay();
 
     return () => {
       isMounted = false;
@@ -345,11 +368,25 @@ const PenToolCanvas = () => {
     };
   }, []);
 
-  return (
-    <div className="canvasContainer">
-      <canvas ref={canvasRef} className="myCanvas" />
+return (
+  <div className={`canvasContainer ${isDrawing ? 'drawingMode' : ''}`}>
+    <canvas ref={canvasRef} className="myCanvas" />
+    <div
+      style={{
+        position: 'absolute',
+        top: '10px',
+        left: '10px',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        color: '#fff',
+        padding: '10px',
+        borderRadius: '8px',
+        fontSize: '14px',
+        maxWidth: '250px', // Set a max-width for a more box-like appearance
+      }}
+    >
+      {modeDisplay}
     </div>
-  );
-};
-
+  </div>
+);
+};  
 export default PenToolCanvas;
