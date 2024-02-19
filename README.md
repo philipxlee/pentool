@@ -29,6 +29,7 @@
 - While in drawing mode, click `w` to create a handle with ends that can be dragged.
     - Dragging the circles of the handles outwards increases the length of the handle.
     - Dragging the circles of the handles around will rotate the handle.
+- Click `backspace` to undo the previously drawn node/line.
 
 ---
 
