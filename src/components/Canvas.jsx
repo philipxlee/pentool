@@ -16,6 +16,8 @@ const imageUrl = shirtImage;
   const handleLineRef = useRef(null);
   const startCircleRef = useRef(null);
   const endCircleRef = useRef(null);
+  const drawingActionsRef = useRef([]);
+
   useEffect(() => {
     let isMounted = true;
     const canvasElement = canvasRef.current;
@@ -58,6 +60,7 @@ const imageUrl = shirtImage;
           <br /> &nbsp;&nbsp;&nbsp;&nbsp;- Q: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Switch Mode
           <br /> &nbsp;&nbsp;&nbsp;&nbsp;- Shift: &nbsp; Toggle Draw
           <br /> &nbsp;&nbsp;&nbsp;&nbsp;- W: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Toggle Handle
+          <br /> &nbsp;&nbsp;&nbsp;&nbsp;- Backspace: Undo
         </div>
       );
     };
@@ -93,6 +96,7 @@ const imageUrl = shirtImage;
         evented: false,
       });
       canvas.add(circle);
+      drawingActionsRef.current.push(circle);
     };
 
     const drawLine = (pointer) => {
@@ -107,6 +111,7 @@ const imageUrl = shirtImage;
           evented: false,
         });
         canvas.add(line);
+        drawingActionsRef.current.push(line);
       }
       lastPointRef.current = pointer;
       if (tempLineRef.current) {
@@ -127,6 +132,7 @@ const imageUrl = shirtImage;
           evented: false,
         });
         canvas.add(curve);
+        drawingActionsRef.current.push(curve);
         pointsRef.current = [];
         lastPointRef.current = { x: end.x, y: end.y };
         canvas.getObjects('circle').forEach((obj) => {
@@ -136,6 +142,14 @@ const imageUrl = shirtImage;
         });
         drawingModeRef.current = 'line'; // default back to drawing lines after a curve
         updateModeDisplay();
+      }
+    };
+
+    const undoLastAction = () => {
+      const lastAction = drawingActionsRef.current.pop();
+      if (lastAction) {
+        canvas.remove(lastAction);
+        canvas.renderAll();
       }
     };
 
@@ -268,6 +282,9 @@ const imageUrl = shirtImage;
           drawHandle();
         }
         canvas.renderAll();
+      } else if (event.key === 'Backspace') {
+        event.preventDefault(); // Prevent the default back navigation
+        undoLastAction();
       }
       updateModeDisplay();
     };
