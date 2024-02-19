@@ -284,6 +284,11 @@ const imageUrl = shirtImage;
         canvas.renderAll();
       } else if (event.key === 'Backspace') {
         event.preventDefault(); // Prevent the default back navigation
+        if (tempLineRef.current) {
+          canvas.remove(tempLineRef.current);
+          tempLineRef.current = null;
+        }
+        lastPointRef.current = null;
         undoLastAction();
       }
       updateModeDisplay();
